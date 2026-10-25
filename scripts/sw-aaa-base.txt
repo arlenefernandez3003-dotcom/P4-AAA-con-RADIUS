@@ -1,0 +1,47 @@
+enable
+configure terminal
+
+hostname SW-AAA
+no ip domain-lookup
+ip domain-name itla.local
+spanning-tree mode rapid-pvst
+clock timezone AST -4 0
+
+vlan 10
+ name GESTION
+vlan 999
+ name BLACKHOLE
+exit
+
+interface Vlan10
+ description Gestion
+ ip address 10.7.30.3 255.255.255.224
+ no shutdown
+exit
+
+ip default-gateway 10.7.30.2
+
+interface range Ethernet0/0 - 1
+ switchport mode access
+ switchport access vlan 10
+ switchport nonegotiate
+ spanning-tree portfast
+ no shutdown
+exit
+
+interface Ethernet0/0
+ description Enlace hacia R-AAA
+exit
+
+interface Ethernet0/1
+ description AAA-SRV
+exit
+
+interface range Ethernet0/2 - 3 , Ethernet1/0 - 3
+ description Puerto sin uso
+ switchport mode access
+ switchport access vlan 999
+ shutdown
+exit
+
+end
