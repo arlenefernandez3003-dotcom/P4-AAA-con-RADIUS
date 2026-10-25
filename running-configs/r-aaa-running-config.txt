@@ -1,0 +1,206 @@
+Current configuration : 3895 bytes
+!
+! Last configuration change at 21:17:03 AST Sat Oct 24 2026 by admin-local
+!
+version 15.4
+no service pad
+service timestamps debug datetime msec localtime show-timezone
+service timestamps log datetime msec localtime show-timezone
+service password-encryption
+!
+hostname R-AAA
+!
+boot-start-marker
+boot-end-marker
+!
+aqm-register-fnf
+!
+security authentication failure rate 3 log
+security passwords min-length 10
+logging buffered 64000 informational
+logging console warnings
+enable secret level 5 5 $1$z3iH$aMglA1iyj72jjYPPPmsbd/
+enable secret level 10 5 $1$3ChJ$tjxplJ19/wjfW30Ql175N.
+enable secret 5 $1$MT7N$V8p3thTTc6KZSJVok.1eN.
+!
+aaa new-model
+aaa local authentication attempts max-fail 3
+!
+!
+aaa group server radius NPS-GROUP
+ server name NPS-AAA
+ ip radius source-interface Ethernet0/0
+!
+aaa authentication fail-message ^CC
+Acceso denegado.
+^C
+aaa authentication login default local
+aaa authentication login CON-AUX-AAA group NPS-GROUP local
+aaa authentication login VTY-LOCAL local
+aaa authentication enable default enable
+aaa authorization console
+aaa authorization exec default local
+aaa authorization exec CON-AUX-AAA group NPS-GROUP local
+aaa authorization exec VTY-LOCAL local
+aaa accounting exec CON-AUX-AAA start-stop group NPS-GROUP
+aaa accounting connection default start-stop group NPS-GROUP
+aaa accounting system default start-stop group NPS-GROUP
+!
+!
+!
+!
+!
+aaa session-id common
+clock timezone AST -4 0
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+no ip source-route
+!
+!
+!
+!
+!
+!
+
+
+!
+!
+!
+!
+no ip domain lookup
+ip domain name itla.local
+ip cef
+login block-for 120 attempts 3 within 60
+login quiet-mode access-class SSH-MGMT
+login on-failure log
+login on-success log
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+username admin-local privilege 15 secret 5 $1$sACL$IOpTQN5OdGGK0t4r3i86L1
+!
+redundancy
+!
+!
+ip ssh time-out 60
+ip ssh logging events
+ip ssh version 2
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Ethernet0/0
+ description Gestion - hacia SW-AAA
+ ip address 10.7.30.2 255.255.255.224
+!
+interface Ethernet0/1
+ description Puerto sin uso
+ no ip address
+ shutdown
+!
+interface Ethernet0/2
+ description Puerto sin uso
+ no ip address
+ shutdown
+!
+interface Ethernet0/3
+ description Puerto sin uso
+ no ip address
+ shutdown
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+!
+ip access-list standard SSH-MGMT
+ permit 10.7.30.4
+ deny   any log
+!
+!
+!
+!
+!
+!
+radius server NPS-AAA
+ address ipv4 10.7.30.4 auth-port 1812 acct-port 1813
+ timeout 5
+ retransmit 2
+ key 7 003647020D4E184B3D355E035B49574153
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+privilege interface all level 10 shutdown
+privilege interface all level 10 description
+privilege interface level 10 exit
+privilege configure level 10 end
+privilege configure level 10 interface
+privilege exec level 10 configure terminal
+privilege exec level 10 configure
+privilege exec level 10 show aaa servers
+privilege exec level 10 show aaa
+privilege exec level 10 show radius statistics
+privilege exec level 10 show radius
+privilege exec level 5 show ip route
+privilege exec level 5 show ip
+privilege exec level 5 show logging
+privilege exec level 10 show startup-config
+privilege exec level 10 show running-config
+privilege exec level 10 show
+banner login ^CC
+ACCESO RESTRINGIDO: solo personal autorizado. Toda actividad es registrada.
+^C
+!
+line con 0
+ exec-timeout 5 0
+ privilege level 0
+ authorization exec CON-AUX-AAA
+ accounting exec CON-AUX-AAA
+ logging synchronous
+ login authentication CON-AUX-AAA
+line aux 0
+ exec-timeout 5 0
+ privilege level 0
+ authorization exec CON-AUX-AAA
+ accounting exec CON-AUX-AAA
+ logging synchronous
+ login authentication CON-AUX-AAA
+line vty 0 4
+ access-class SSH-MGMT in
+ exec-timeout 5 0
+ privilege level 0
+ authorization exec VTY-LOCAL
+ logging synchronous
+ login authentication VTY-LOCAL
+ transport input ssh
+ transport output none
+!
+!
+end
