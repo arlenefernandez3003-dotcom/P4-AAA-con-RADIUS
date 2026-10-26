@@ -12,10 +12,6 @@
 
 ---
 
-> 📚 **Nota:** las contraseñas y los secretos de este laboratorio son de práctica. En producción se guardan en un gestor de secretos y no en el repositorio.
-
----
-
 ## 📋 Tabla de Contenido
 
 1. [Propósito del Laboratorio](#1-propósito-del-laboratorio)
