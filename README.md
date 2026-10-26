@@ -1132,6 +1132,4 @@ Numeradas en el orden en que se toman durante el procedimiento.
 │   ├── r-aaa-running-config.txt
 │   ├── sw-aaa-running-config.txt
 │   └── nps-config.xml
-└── entregable/
-    └── ArleneFernandez_20250730_P8.txt   ← enlace del repositorio
 ```
