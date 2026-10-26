@@ -35,9 +35,8 @@
    - [Paso 11. Guardar y exportar las configuraciones](#paso-11-guardar-y-exportar-las-configuraciones)
    - [Paso 12. Pruebas de verificación](#paso-12-pruebas-de-verificación)
 5. [Matriz de cumplimiento de requisitos](#5-matriz-de-cumplimiento-de-requisitos)
-6. [Guion del video](#6-guion-del-video)
-7. [Capturas de Pantalla](#7-capturas-de-pantalla)
-8. [Estructura del Repositorio](#8-estructura-del-repositorio)
+6. [Capturas de Pantalla](#6-capturas-de-pantalla)
+7. [Estructura del Repositorio](#7-estructura-del-repositorio)
 
 ---
 
@@ -291,55 +290,67 @@ New-NetFirewallRule -DisplayName "RADIUS-Gestion" -Direction Inbound -Protocol U
 
 **3.4 — Políticas de red (GUI)**
 
-**Ruta:** `Server Manager → Tools → Network Policy Server (Servidor de directivas de redes) → Policies → Network Policies → New`
+**Ruta:** `Administrador del servidor → Herramientas → Servidor de directivas de redes → NPS (local) → Directivas → Directivas de red → clic derecho → Nueva`
 
-Se crean **tres políticas**, una por grupo. Todas se configuran igual, salvo el grupo y el nivel.
+Se crean **tres políticas**, una por grupo. Todas se configuran igual, salvo el grupo y el nivel. Entre paréntesis se indica el nombre en inglés.
 
 | Campo | `Cisco-Nivel10` | `Cisco-Nivel5` | `Cisco-Nivel0` |
 |---|---|---|---|
-| Policy name | `Cisco-Nivel10` | `Cisco-Nivel5` | `Cisco-Nivel0` |
-| Type of network access server | `Unspecified` | `Unspecified` | `Unspecified` |
-| Condición 1: **Windows Groups** | `ITLA\Nivel10` | `ITLA\Nivel5` | `ITLA\Nivel0` |
-| Condición 2: **Client Friendly Name** | `^(R-AAA\|SW-AAA)$` | `^(R-AAA\|SW-AAA)$` | `^(R-AAA\|SW-AAA)$` |
-| Access permission | `Access granted` | `Access granted` | `Access granted` |
-| Authentication methods | Solo **Unencrypted authentication (PAP, SPAP)** | igual | igual |
+| Nombre de la directiva (Policy name) | `Cisco-Nivel10` | `Cisco-Nivel5` | `Cisco-Nivel0` |
+| Tipo de servidor de acceso a la red (Type of network access server) | `Sin especificar` | `Sin especificar` | `Sin especificar` |
+| Condición 1: **Grupos de Windows** (Windows Groups) | `ITLA\Nivel10` | `ITLA\Nivel5` | `ITLA\Nivel0` |
+| Condición 2: **Nombre descriptivo del cliente** (Client Friendly Name) | `^(R-AAA\|SW-AAA)$` | `^(R-AAA\|SW-AAA)$` | `^(R-AAA\|SW-AAA)$` |
+| Permiso de acceso (Access permission) | `Acceso concedido` | `Acceso concedido` | `Acceso concedido` |
+| Métodos de autenticación (Authentication methods) | Solo **Autenticación sin cifrar (PAP, SPAP)** | igual | igual |
 | Atributo estándar **Service-Type** | `Login` | `Login` | `Login` |
-| Atributo específico **Cisco-AV-Pair** | `shell:priv-lvl=10` | `shell:priv-lvl=5` | `shell:priv-lvl=0` |
+| Atributo específico del proveedor **Cisco-AV-Pair** | `shell:priv-lvl=10` | `shell:priv-lvl=5` | `shell:priv-lvl=0` |
 
-Pasos dentro del asistente (para cada política):
+Pasos del asistente *Nueva directiva de red* (para cada política):
 
-1. **Conditions:** agregar *Windows Groups* con el grupo del nivel y *Client Friendly Name* con la expresión regular de la tabla.
-2. **Authentication Methods:** desmarcar todos los métodos y marcar solo **Unencrypted authentication (PAP, SPAP)**. Dejar desmarcada *Allow clients to connect without negotiating an authentication method*.
-3. **Constraints:** sin cambios.
-4. **Settings → Standard:** quitar *Framed-Protocol* y *Service-Type = Framed*, y agregar **Service-Type = Login**.
-5. **Settings → Vendor Specific:** *Add* → *Vendor*: `Cisco` → *Add* → atributo **Cisco-AV-Pair** → *Add* → valor `shell:priv-lvl=<nivel>`.
-6. Finalizar.
+1. **Especificar el nombre de la directiva de red y el tipo de conexión:** escribir el nombre de la directiva y dejar *Tipo de servidor de acceso a la red* en `Sin especificar`. Pulsar **Siguiente**.
+2. **Especificar condiciones:** pulsar **Agregar...** para cada condición.
+   * **Condición 1:** en la ventana *Seleccionar condición*, dentro del grupo **Grupos**, elegir **Grupos de Windows** → **Agregar...** → **Agregar grupos...** → escribir el grupo del nivel (por ejemplo `Nivel10`) → **Comprobar nombres** → **Aceptar**.
+   * **Condición 2:** pulsar **Agregar...** de nuevo, **desplazarse hacia abajo** en la ventana *Seleccionar condición* hasta el grupo **Cliente RADIUS** (RADIUS Client) y elegir **Nombre descriptivo del cliente** → **Agregar...** → escribir `^(R-AAA|SW-AAA)$` → **Aceptar**.
 
-Al terminar, verificar el **orden de procesamiento**: las tres políticas `Cisco-*` deben estar **por encima** de las dos políticas predeterminadas (*clic derecho → Move Up*).
+   > La *Condición 2* no está en la lista inicial: se encuentra dentro del grupo **Cliente RADIUS**, más abajo en la misma ventana. Limita la política a los dos equipos. Aunque no se agregue, solo pueden autenticar los clientes registrados en **Clientes RADIUS** (Paso 3.2).
+
+   Pulsar **Siguiente**.
+3. **Especificar permiso de acceso:** marcar **Acceso concedido**. Pulsar **Siguiente**.
+4. **Configurar métodos de autenticación:** quitar todos los métodos marcados (EAP, MS-CHAP y MS-CHAP v2) y marcar **solo** **Autenticación sin cifrar (PAP, SPAP)**. Dejar desmarcada la opción *Permitir que los clientes se conecten sin negociar un método de autenticación*. Si aparece un aviso sobre la autenticación sin cifrar, aceptarlo: Cisco IOS envía la contraseña con PAP y el secreto compartido la protege entre el equipo y NPS. Pulsar **Siguiente**.
+5. **Configurar restricciones:** sin cambios. Pulsar **Siguiente**.
+6. **Configurar valores:**
+   * **Atributos RADIUS → Estándar:** seleccionar `Framed-Protocol` y `Service-Type` (con valor `Framed`) y pulsar **Quitar**. Pulsar **Agregar...** → **Service-Type** → **Agregar...** → valor `Login` → **Aceptar**.
+   * **Atributos RADIUS → Específico del proveedor:** pulsar **Agregar...** → *Proveedor*: `Cisco` → **Agregar...** → atributo **Cisco-AV-Pair** → **Agregar...** → valor `shell:priv-lvl=<nivel>` (por ejemplo `shell:priv-lvl=10`) → **Aceptar**.
+
+   Pulsar **Siguiente**.
+7. **Completar la nueva directiva de red:** revisar el resumen y pulsar **Finalizar**.
+
+Al terminar, verificar el **orden de procesamiento** en `Directivas de red`: las tres políticas `Cisco-*` deben estar **por encima** de las dos políticas predeterminadas (*Conexiones al servidor de Enrutamiento y acceso remoto de Microsoft* y *Conexiones a otros servidores de acceso*). Si no es así: clic derecho sobre la política → **Subir**.
 
 **3.5 — Registros de NPS**
 
 **Registro de eventos (autenticaciones aceptadas y rechazadas):**
-`NPS (Local) → clic derecho → Properties → General` → marcar **Rejected authentication requests** y **Successful authentication requests**.
+`NPS (local) → clic derecho → Propiedades → pestaña General` → marcar **Solicitudes de autenticación rechazadas** y **Solicitudes de autenticación correctas** (*Rejected / Successful authentication requests*).
 
-**Auditoría de la categoría *Network Policy Server*:**
+**Auditoría de la categoría *Servidor de directivas de redes*:**
 
 ```powershell
 auditpol /set /subcategory:"{0CCE9243-69AE-11D9-BED3-505054503030}" /success:enable /failure:enable
 ```
 
 **Registro de contabilidad en archivo:**
-`NPS (Local) → Accounting → Configure Accounting → Log to a text file on the local computer` y en *Log File Properties*:
-
-| Campo | Valor |
-|---|---|
-| Directory | `C:\NPS-Logs` |
-| Log format | `IAS` |
-| Log the following | Accounting requests, Authentication requests, Periodic accounting status, Periodic authentication status |
 
 ```powershell
 New-Item -ItemType Directory -Path C:\NPS-Logs -Force
 ```
+
+**Ruta:** `NPS (local) → Contabilidad → Configurar contabilidad` y, en el asistente, elegir **Registrar en un archivo de texto en el equipo local**. Después, en `NPS (local) → Contabilidad → Cambiar propiedades del archivo de registro`:
+
+| Pestaña | Campo | Valor |
+|---|---|---|
+| Configuración | Registrar la siguiente información | Solicitudes de contabilidad, Solicitudes de autenticación, Estado de contabilidad periódico, Estado de autenticación periódico |
+| Archivo de registro | Directorio | `C:\NPS-Logs` |
+| Archivo de registro | Formato | `IAS` |
 
 > Ver evidencia: [04_nps_clientes_radius.png](screenshots/04_nps_clientes_radius.png), [05_nps_politicas.png](screenshots/05_nps_politicas.png), [06_nps_politica_atributos.png](screenshots/06_nps_politica_atributos.png), [07_nps_accounting_eventos.png](screenshots/07_nps_accounting_eventos.png)
 
@@ -665,7 +676,7 @@ security authentication failure rate 3 log
 end
 ```
 
-Para ver en vivo la autenticación, la autorización y RADIUS (durante las pruebas y el video):
+Para ver en vivo la autenticación, la autorización y RADIUS (durante las pruebas):
 
 ```bash
 debug aaa authentication
@@ -927,18 +938,7 @@ Copiar `nps-config.xml` a `running-configs/nps-config.xml`.
 
 ### Paso 12. Pruebas de verificación
 
-**12.1 — Hora y fecha (se muestran al inicio del video)**
-
-```bash
-show clock
-```
-```powershell
-Get-Date
-```
-
-> Ver evidencia: [18_hora_fecha.png](screenshots/18_hora_fecha.png)
-
-**12.2 — Consola del Router con cada nivel (RADIUS + AD)**
+**12.1 — Consola del Router con cada nivel (RADIUS + AD)**
 
 Con `debug aaa authentication`, `debug aaa authorization` y `debug radius` activos, abrir la consola de `R-AAA` e iniciar sesión con cada usuario (contraseña `Lab12345!`):
 
@@ -953,9 +953,9 @@ Con `debug aaa authentication`, `debug aaa authorization` y `debug radius` activ
 
 En cada inicio de sesión se verifica el nivel con `show privilege` (debe mostrar `Current privilege level is 0`, `5` o `10`).
 
-> Ver evidencia: [19_consola_nivel0.png](screenshots/19_consola_nivel0.png), [20_consola_nivel5.png](screenshots/20_consola_nivel5.png), [21_consola_nivel10.png](screenshots/21_consola_nivel10.png)
+> Ver evidencia: [18_consola_nivel0.png](screenshots/18_consola_nivel0.png), [19_consola_nivel5.png](screenshots/19_consola_nivel5.png), [20_consola_nivel10.png](screenshots/20_consola_nivel10.png)
 
-**12.3 — Contraseña incorrecta y respaldo local**
+**12.2 — Contraseña incorrecta y respaldo local**
 
 * Iniciar sesión por consola con `user-n10` y una **contraseña incorrecta**: debe rechazar el acceso y generar `%SEC_LOGIN-4-LOGIN_FAILED`.
 * En el servidor, detener NPS y comprobar el **respaldo local**:
@@ -970,9 +970,9 @@ En la consola, iniciar sesión con `admin-local` (`Admin-Local#2026`): tras agot
 Start-Service IAS
 ```
 
-> Ver evidencia: [22_consola_fallo_password.png](screenshots/22_consola_fallo_password.png), [23_consola_fallback_local.png](screenshots/23_consola_fallback_local.png)
+> Ver evidencia: [21_consola_fallo_password.png](screenshots/21_consola_fallo_password.png), [22_consola_fallback_local.png](screenshots/22_consola_fallback_local.png)
 
-**12.4 — Puerto auxiliar**
+**12.3 — Puerto auxiliar**
 
 El puerto auxiliar usa las mismas listas de métodos que la consola. En IOL no se puede abrir una sesión física por el auxiliar, así que se comprueba con:
 
@@ -983,9 +983,9 @@ show running-config | section line aux
 
 Debe mostrar `line aux 0` con `login authentication CON-AUX-AAA`, `authorization exec CON-AUX-AAA` y `accounting exec CON-AUX-AAA`.
 
-> Ver evidencia: [24_show_line_aux.png](screenshots/24_show_line_aux.png)
+> Ver evidencia: [23_show_line_aux.png](screenshots/23_show_line_aux.png)
 
-**12.5 — SSH (solo usuario local) y Telnet deshabilitado**
+**12.4 — SSH (solo usuario local) y Telnet deshabilitado**
 
 Desde el servidor (PowerShell):
 
@@ -1005,9 +1005,9 @@ show privilege
 
 `show ip ssh` debe indicar `SSH Enabled - version 2.0`. Desde otro origen distinto de `10.7.30.4`, el acceso SSH se rechaza por la lista `SSH-MGMT`.
 
-> Ver evidencia: [25_ssh_local_ok.png](screenshots/25_ssh_local_ok.png), [26_ssh_radius_denegado.png](screenshots/26_ssh_radius_denegado.png), [27_telnet_rechazado.png](screenshots/27_telnet_rechazado.png)
+> Ver evidencia: [24_ssh_local_ok.png](screenshots/24_ssh_local_ok.png), [25_ssh_radius_denegado.png](screenshots/25_ssh_radius_denegado.png), [26_telnet_rechazado.png](screenshots/26_telnet_rechazado.png)
 
-**12.6 — Logs en el Router**
+**12.5 — Logs en el Router**
 
 ```bash
 show logging
@@ -1017,11 +1017,11 @@ show radius statistics
 
 En `show logging` deben verse `%SEC_LOGIN-5-LOGIN_SUCCESS`, `%SEC_LOGIN-4-LOGIN_FAILED` y los eventos de SSH. Durante un inicio de sesión por consola, la salida de `debug aaa authentication`, `debug aaa authorization` y `debug radius` muestra `Access-Request`, `Access-Accept` y el atributo `shell:priv-lvl=N`.
 
-> Ver evidencia: [28_logs_router.png](screenshots/28_logs_router.png), [29_debug_radius.png](screenshots/29_debug_radius.png)
+> Ver evidencia: [27_logs_router.png](screenshots/27_logs_router.png), [28_debug_radius.png](screenshots/28_debug_radius.png)
 
-**12.7 — Logs en el servidor (NPS)**
+**12.6 — Logs en el servidor (NPS)**
 
-* **Visor de eventos:** `Event Viewer → Windows Logs → Security`, filtrar por los eventos **6272** (acceso concedido) y **6273** (acceso denegado) de los intentos anteriores. Cada evento muestra el usuario, el cliente RADIUS (`R-AAA` o `SW-AAA`) y la política que aplicó (`Cisco-Nivel10`, etc.).
+* **Visor de eventos:** `Administrador del servidor → Herramientas → Visor de eventos → Registros de Windows → Seguridad`, filtrar por los eventos **6272** (*El servidor de directivas de redes concedió acceso a un usuario*) y **6273** (*...denegó el acceso a un usuario*) de los intentos anteriores. Cada evento muestra el usuario, el cliente RADIUS (`R-AAA` o `SW-AAA`) y la política que aplicó (`Cisco-Nivel10`, etc.).
 * **Contabilidad:** abrir el archivo de registro de `C:\NPS-Logs`:
 
 ```powershell
@@ -1030,13 +1030,13 @@ Get-ChildItem C:\NPS-Logs | Sort-Object LastWriteTime -Descending | Select-Objec
 
 Deben aparecer los registros de inicio y fin de sesión (`Acct-Status-Type`) de cada acceso por consola.
 
-> Ver evidencia: [30_nps_eventos.png](screenshots/30_nps_eventos.png), [31_nps_accounting_log.png](screenshots/31_nps_accounting_log.png)
+> Ver evidencia: [29_nps_eventos.png](screenshots/29_nps_eventos.png), [30_nps_accounting_log.png](screenshots/30_nps_accounting_log.png)
 
-**12.8 — Pruebas en el Switch**
+**12.7 — Pruebas en el Switch**
 
-Repetir en `SW-AAA` las pruebas de los puntos 12.2 a 12.6 (consola con `user-n0`, `user-n5` y `user-n10`, contraseña incorrecta, SSH con `admin-local` y rechazo de `user-n10`, `show line` y logs). El prompt es `SW-AAA`.
+Repetir en `SW-AAA` las pruebas de los puntos 12.1 a 12.5 (consola con `user-n0`, `user-n5` y `user-n10`, contraseña incorrecta, SSH con `admin-local` y rechazo de `user-n10`, `show line` y logs). El prompt es `SW-AAA`.
 
-> Ver evidencia: [32_switch_pruebas.png](screenshots/32_switch_pruebas.png)
+> Ver evidencia: [31_switch_pruebas.png](screenshots/31_switch_pruebas.png)
 
 ---
 
@@ -1045,54 +1045,34 @@ Repetir en `SW-AAA` las pruebas de los puntos 12.2 a 12.6 (consola con `user-n0`
 | Requisito del enunciado | Cómo se cumple | Paso |
 |---|---|---|
 | **Repositorio de GitHub** | Este repositorio | — |
-| Documentación profesional en el repositorio | Este `README.md` y la carpeta `docs` de capturas | — |
+| Documentación profesional en el repositorio | Este `README.md` y la carpeta `screenshots/` | — |
 | Video demostrativo al principio del repositorio | Enlace al inicio de este documento | Inicio |
-| Documentación con imágenes | Capturas numeradas en `screenshots/` | 7 |
+| Documentación con imágenes | Capturas numeradas en `screenshots/` | 6 |
 | Documentación con diagramas | Diagrama de topología | 2.1 |
 | Propósito del laboratorio | Sección 1 | 1 |
-| Todo script utilizado en el repositorio | Carpeta `scripts/` | 8 |
+| Todo script utilizado en el repositorio | Carpeta `scripts/` | 7 |
 | Running-configs en el repositorio | Carpeta `running-configs/` | 11 |
 | **Router:** seguridad en todos los niveles de autenticación y autorización | `aaa authentication login/enable`, `aaa authorization console/exec`, contraseñas `enable secret` por nivel, comandos por nivel de privilegio | 3.2, 7, 8 |
 | **Router:** RADIUS como cliente | `radius server NPS-AAA` y `aaa group server radius NPS-GROUP` | 8.1, 8.2 |
 | **Router:** usuario local | `username admin-local privilege 15` | 7.1 |
 | **Router:** AAA solo en consola y auxiliar | Listas `CON-AUX-AAA` aplicadas solo a `line con 0` y `line aux 0`; VTY con lista local | 3.1, 8.4 |
-| **Router:** logs de autenticación, autorización y RADIUS | `login on-success/on-failure log`, `logging buffered`, `debug aaa`, `debug radius`, contabilidad RADIUS | 3.4, 8.5, 12.6 |
-| **Router:** servicio SSH | SSH versión 2, claves RSA de 2048 bits, solo desde el servidor de gestión | 7.2, 12.5 |
+| **Router:** logs de autenticación, autorización y RADIUS | `login on-success/on-failure log`, `logging buffered`, `debug aaa`, `debug radius`, contabilidad RADIUS | 3.4, 8.5, 12.5 |
+| **Router:** servicio SSH | SSH versión 2, claves RSA de 2048 bits, solo desde el servidor de gestión | 7.2, 12.4 |
 | **Switch:** seguridad en todos los niveles de autenticación y autorización | Igual que el Router | 3.2, 9, 10 |
 | **Switch:** RADIUS como cliente | `radius server NPS-AAA` y `aaa group server radius NPS-GROUP` | 10.1, 10.2 |
 | **Switch:** usuario local | `username admin-local privilege 15` | 9.1 |
 | **Switch:** AAA solo en consola y auxiliar | Igual que el Router | 3.1, 10.4 |
-| **Switch:** logs de autenticación, autorización y RADIUS | Igual que el Router | 3.4, 10.5, 12.8 |
-| **Switch:** servicio SSH | SSH versión 2, solo desde el servidor de gestión | 9.2, 12.8 |
+| **Switch:** logs de autenticación, autorización y RADIUS | Igual que el Router | 3.4, 10.5, 12.7 |
+| **Switch:** servicio SSH | SSH versión 2, solo desde el servidor de gestión | 9.2, 12.7 |
 | **Servidor:** Active Directory con 1 grupo nivel 0 | Grupo `Nivel0` | 2.3 |
 | **Servidor:** 1 grupo nivel 5 | Grupo `Nivel5` | 2.3 |
 | **Servidor:** 1 grupo nivel 10 | Grupo `Nivel10` | 2.3 |
-| **Servidor:** servicio NPS | Rol Network Policy and Access Services, tres políticas por grupo | 3 |
-| **Entregable:** archivo TXT con el enlace del repositorio | `entregable/ArleneFernandez_20250730_P8.txt` | 8 |
-| **Entregable:** video de máximo 10 minutos con hora, fecha, cara y voz, solo demostración | Guion de la sección 6 | 6 |
+| **Servidor:** servicio NPS | Rol Servicios de acceso y directivas de redes (NPAS), tres políticas por grupo | 3 |
+| **Entregable:** archivo TXT con el enlace del repositorio | `entregable/ArleneFernandez_20250730_P8.txt` | 7 |
 
 ---
 
-## 6. Guion del video
-
-Duración objetivo: **9 minutos** (máximo 10). Se muestra la **cara y se escucha la voz** durante toda la grabación.
-
-| Tiempo | Contenido |
-|---|---|
-| 0:00 – 0:30 | Presentación, **hora y fecha** (`show clock` y `Get-Date`) |
-| 0:30 – 1:15 | Topología en PNETLab y servidor: grupos `Nivel0`, `Nivel5`, `Nivel10` y usuarios en Active Directory |
-| 1:15 – 2:00 | NPS: clientes RADIUS, tres políticas con `Cisco-AV-Pair` y registros |
-| 2:00 – 3:30 | **Router, consola:** `user-n0`, `user-n5` y `user-n10` con `debug aaa` y `debug radius`; comandos permitidos y bloqueados |
-| 3:30 – 4:15 | Contraseña incorrecta y respaldo local con NPS detenido |
-| 4:15 – 5:15 | **Router, SSH:** `admin-local` entra, `user-n10` es denegado, Telnet rechazado, `show ip ssh` |
-| 5:15 – 5:45 | **Router, auxiliar y logs:** `show line` y `show logging` |
-| 5:45 – 7:30 | **Switch:** las mismas pruebas (consola, SSH, logs) |
-| 7:30 – 8:30 | **Servidor:** eventos 6272 y 6273 en el Visor de eventos y el archivo de contabilidad |
-| 8:30 – 9:00 | Cierre: resumen del cumplimiento |
-
----
-
-## 7. Capturas de Pantalla
+## 6. Capturas de Pantalla
 
 Numeradas en el orden en que se toman durante el procedimiento.
 
@@ -1115,29 +1095,28 @@ Numeradas en el orden en que se toman durante el procedimiento.
 | 15 | [`15_switch_radius_test.png`](screenshots/15_switch_radius_test.png) | 10.2 | `test aaa` exitoso con los tres usuarios, en el switch. |
 | 16 | [`16_switch_aaa_lineas.png`](screenshots/16_switch_aaa_lineas.png) | 10.5 | `show running-config` del switch: secciones `aaa` y `line`. |
 | 17 | [`17_nps_export.png`](screenshots/17_nps_export.png) | 11 | Exportación de la configuración de NPS. |
-| 18 | [`18_hora_fecha.png`](screenshots/18_hora_fecha.png) | 12.1 | `show clock` y `Get-Date`. |
-| 19 | [`19_consola_nivel0.png`](screenshots/19_consola_nivel0.png) | 12.2 | Consola con `user-n0`: comandos bloqueados. |
-| 20 | [`20_consola_nivel5.png`](screenshots/20_consola_nivel5.png) | 12.2 | Consola con `user-n5`: consulta permitida, configuración bloqueada. |
-| 21 | [`21_consola_nivel10.png`](screenshots/21_consola_nivel10.png) | 12.2 | Consola con `user-n10`: configuración de interfaz permitida, resto bloqueado. |
-| 22 | [`22_consola_fallo_password.png`](screenshots/22_consola_fallo_password.png) | 12.3 | Acceso rechazado con contraseña incorrecta. |
-| 23 | [`23_consola_fallback_local.png`](screenshots/23_consola_fallback_local.png) | 12.3 | Acceso con el usuario local cuando NPS está detenido. |
-| 24 | [`24_show_line_aux.png`](screenshots/24_show_line_aux.png) | 12.4 | Línea auxiliar con las listas AAA. |
-| 25 | [`25_ssh_local_ok.png`](screenshots/25_ssh_local_ok.png) | 12.5 | SSH exitoso con el usuario local. |
-| 26 | [`26_ssh_radius_denegado.png`](screenshots/26_ssh_radius_denegado.png) | 12.5 | SSH con un usuario de AD denegado. |
-| 27 | [`27_telnet_rechazado.png`](screenshots/27_telnet_rechazado.png) | 12.5 | Telnet rechazado. |
-| 28 | [`28_logs_router.png`](screenshots/28_logs_router.png) | 12.6 | `show logging` con inicios de sesión exitosos y fallidos. |
-| 29 | [`29_debug_radius.png`](screenshots/29_debug_radius.png) | 12.6 | `debug aaa` y `debug radius` durante un inicio de sesión. |
-| 30 | [`30_nps_eventos.png`](screenshots/30_nps_eventos.png) | 12.7 | Eventos 6272 y 6273 en el Visor de eventos. |
-| 31 | [`31_nps_accounting_log.png`](screenshots/31_nps_accounting_log.png) | 12.7 | Archivo de contabilidad de NPS. |
-| 32 | [`32_switch_pruebas.png`](screenshots/32_switch_pruebas.png) | 12.8 | Pruebas de consola, SSH y logs en el switch. |
+| 18 | [`18_consola_nivel0.png`](screenshots/18_consola_nivel0.png) | 12.1 | Consola con `user-n0`: comandos bloqueados. |
+| 19 | [`19_consola_nivel5.png`](screenshots/19_consola_nivel5.png) | 12.1 | Consola con `user-n5`: consulta permitida, configuración bloqueada. |
+| 20 | [`20_consola_nivel10.png`](screenshots/20_consola_nivel10.png) | 12.1 | Consola con `user-n10`: configuración de interfaz permitida, resto bloqueado. |
+| 21 | [`21_consola_fallo_password.png`](screenshots/21_consola_fallo_password.png) | 12.2 | Acceso rechazado con contraseña incorrecta. |
+| 22 | [`22_consola_fallback_local.png`](screenshots/22_consola_fallback_local.png) | 12.2 | Acceso con el usuario local cuando NPS está detenido. |
+| 23 | [`23_show_line_aux.png`](screenshots/23_show_line_aux.png) | 12.3 | Línea auxiliar con las listas AAA. |
+| 24 | [`24_ssh_local_ok.png`](screenshots/24_ssh_local_ok.png) | 12.4 | SSH exitoso con el usuario local. |
+| 25 | [`25_ssh_radius_denegado.png`](screenshots/25_ssh_radius_denegado.png) | 12.4 | SSH con un usuario de AD denegado. |
+| 26 | [`26_telnet_rechazado.png`](screenshots/26_telnet_rechazado.png) | 12.4 | Telnet rechazado. |
+| 27 | [`27_logs_router.png`](screenshots/27_logs_router.png) | 12.5 | `show logging` con inicios de sesión exitosos y fallidos. |
+| 28 | [`28_debug_radius.png`](screenshots/28_debug_radius.png) | 12.5 | `debug aaa` y `debug radius` durante un inicio de sesión. |
+| 29 | [`29_nps_eventos.png`](screenshots/29_nps_eventos.png) | 12.6 | Eventos 6272 y 6273 en el Visor de eventos. |
+| 30 | [`30_nps_accounting_log.png`](screenshots/30_nps_accounting_log.png) | 12.6 | Archivo de contabilidad de NPS. |
+| 31 | [`31_switch_pruebas.png`](screenshots/31_switch_pruebas.png) | 12.7 | Pruebas de consola, SSH y logs en el switch. |
 
 ---
 
-## 8. Estructura del Repositorio
+## 7. Estructura del Repositorio
 
 ```
 /
-├── README.md                  ← este documento (el video va al inicio)
+├── README.md                  ← este documento
 ├── screenshots/               ← capturas numeradas de cada configuración
 ├── scripts/
 │   ├── servidor-ad.ps1        ← servidor: red, Active Directory, grupos, usuarios y NPS
@@ -1152,5 +1131,3 @@ Numeradas en el orden en que se toman durante el procedimiento.
 └── entregable/
     └── ArleneFernandez_20250730_P8.txt   ← enlace del repositorio
 ```
-
-> Ajustar el número de práctica (`P8`) según lo indicado por el profesor. El video debe subirse a YouTube y su enlace colocarse al principio del repositorio.
