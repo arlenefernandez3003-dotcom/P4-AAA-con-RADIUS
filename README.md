@@ -992,8 +992,8 @@ Debe mostrar `line aux 0` con `login authentication CON-AUX-AAA`, `authorization
 Desde el servidor (PowerShell):
 
 ```powershell
-ssh admin-local@10.7.30.2        # debe entrar con nivel 15
-ssh user-n10@10.7.30.2           # debe ser DENEGADO (RADIUS no se usa en VTY)
+ssh -c aes256-cbc admin-local@10.7.30.2        # debe entrar con nivel 15
+ssh -c aes256-cbc user-n10@10.7.30.2           # debe ser DENEGADO (RADIUS no se usa en VTY)
 Test-NetConnection 10.7.30.2 -Port 23   # Telnet: debe fallar
 ```
 
