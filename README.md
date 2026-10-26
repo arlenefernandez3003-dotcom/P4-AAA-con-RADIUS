@@ -531,6 +531,7 @@ end
 configure terminal
 
 ! Nivel 5: consulta básica
+privilege exec level 5 show
 privilege exec level 5 show logging
 privilege exec level 5 show ip route
 
@@ -754,6 +755,7 @@ end
 ```bash
 configure terminal
 
+privilege exec level 5 show
 privilege exec level 5 show logging
 privilege exec level 5 show ip route
 
