@@ -1036,7 +1036,13 @@ Deben aparecer los registros de inicio y fin de sesión (`Acct-Status-Type`) de 
 
 **12.7 — Pruebas en el Switch**
 
-Repetir en `SW-AAA` las pruebas de los puntos 12.1 a 12.5 (consola con `user-n0`, `user-n5` y `user-n10`, contraseña incorrecta, SSH con `admin-local` y rechazo de `user-n10`, `show line` y logs). El prompt es `SW-AAA`.
+Se replicó la matriz de pruebas en el Switch `SW-AAA` (10.7.30.3), confirmando el mismo comportamiento que en el Router `R-AAA`:.
+
+- Consola: Autenticación centralizada mediante RADIUS (NPS) con asignación dinámica de privilegios por Active Directory (`user-n0` restringido, `user-n5` consulta básica, `user-n10` gestión de interfaces).
+
+- VTY (SSH): Autenticación restringida exclusivamente al usuario local (`admin-local`) desde la IP de gestión `10.7.30.4`, denegando usuarios de AD y bloqueando Telnet.
+
+- Registros: Generación de eventos de auditoría local (`show logging`) y envío de contabilidad al servidor NPS.
 
 > Ver evidencia: [31_switch_pruebas.png](screenshots/31_switch_pruebas.png)
 
