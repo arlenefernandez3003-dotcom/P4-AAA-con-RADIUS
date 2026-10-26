@@ -1072,7 +1072,6 @@ Se replicó la matriz de pruebas en el Switch `SW-AAA` (10.7.30.3), confirmando 
 | **Servidor:** 1 grupo nivel 5 | Grupo `Nivel5` | 2.3 |
 | **Servidor:** 1 grupo nivel 10 | Grupo `Nivel10` | 2.3 |
 | **Servidor:** servicio NPS | Rol Servicios de acceso y directivas de redes (NPAS), tres políticas por grupo | 3 |
-| **Entregable:** archivo TXT con el enlace del repositorio | `entregable/ArleneFernandez_20250730_P8.txt` | 7 |
 
 ---
 
